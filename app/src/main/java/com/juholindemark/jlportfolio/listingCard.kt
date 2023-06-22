@@ -51,7 +51,8 @@ import com.juholindemark.jlportfolio.util.OutputFilter
 fun ListingCard(message: Message, key:String, messageViewModel: MessageViewModel){
     val outputFilter = OutputFilter()
     var expanded by remember { mutableStateOf(false) }
-    val contx = LocalContext.current;
+    val contx = LocalContext.current
+
     Card(
         onClick = { expanded = !expanded },
         modifier = Modifier.padding(10.dp),
@@ -66,7 +67,8 @@ fun ListingCard(message: Message, key:String, messageViewModel: MessageViewModel
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = outputFilter.filterText(message.headline), style = MaterialTheme.typography.headlineSmall  )
-                IconButton(onClick = { Log.d("CARD", "Set read true") }, modifier = Modifier.border(BorderStroke(1.dp, Color.Gray), shape = CircleShape), ) {
+                // Call view model to request read property update
+                IconButton(onClick = { messageViewModel.setRead(key) }, modifier = Modifier.border(BorderStroke(1.dp, Color.Gray), shape = CircleShape), ) {
                     if(message.read){
                         Icon(Icons.Outlined.AutoStories, contentDescription = "read", tint = Color.Green)
                     }else{
@@ -81,7 +83,8 @@ fun ListingCard(message: Message, key:String, messageViewModel: MessageViewModel
                 OutlinedButton(onClick = { openMailApp(contx, outputFilter.filterEmail(message.mail))  }) {
                     Text(text = outputFilter.filterEmail(message.mail))
                 }
-                Button(onClick = { Log.d("CARD", "remove item") }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                // Call view model to request delete on key
+                Button(onClick = { messageViewModel.deleteEntry(key) }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
                     Text(text = "Delete")
                 }
             }

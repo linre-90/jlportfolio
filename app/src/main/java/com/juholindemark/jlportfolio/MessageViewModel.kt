@@ -29,12 +29,78 @@ class MessageViewModel(private val messageService: MessageService): ViewModel() 
 
     /** Delete entry from database. */
     fun deleteEntry(id: String){
-
+        _messages.update { currState ->
+            currState.copy(
+                uiMessages = currState.uiMessages,
+                initialized = currState.initialized,
+                refreshRequested = true
+            )
+        }
+        messageService.deleteEntry(id){ error ->
+            if(error != null){
+                Log.d("MESSAGEVIEVMODEL", error.message.toString())
+                _messages.update { currState ->
+                    currState.copy(
+                        uiMessages = currState.uiMessages,
+                        initialized = currState.initialized,
+                        refreshRequested = false
+                    )
+                }
+            }else{
+                val  futureState :MessageUiState = _messages.value
+                futureState.uiMessages.remove(id)
+                _messages.update { currState ->
+                    currState.copy(
+                        uiMessages = futureState.uiMessages,
+                        initialized = currState.initialized,
+                        refreshRequested = false
+                    )
+                }
+            }
+        }
     }
 
     /** Mark contact as read. */
-    fun setRead(boolean: Boolean){
+    fun setRead(id: String){
+        val msg = _messages.value.uiMessages[id]
+        _messages.update { currState ->
+            currState.copy(
+                uiMessages = currState.uiMessages,
+                initialized = currState.initialized,
+                refreshRequested = true
+            )
+        }
+        messageService.setRead(id, Message(msg!!)){ error ->
+            if(error != null){
+                Log.d("MESSAGEVIEVMODEL", error.message.toString())
+            }else{
+                _messages.update { currState ->
+                    Log.d("asd", "asdasdasd")
+                    val updatableMessage = currState.uiMessages[id]
+                    val  futureState :MessageUiState
+                    if(updatableMessage != null){
+                        updatableMessage.read = !updatableMessage.read
+                        futureState = _messages.value
+                        futureState.uiMessages[id] = updatableMessage
+                        // update to new ui state
+                        currState.copy(
+                            uiMessages = futureState.uiMessages,
+                            initialized = currState.initialized,
+                            refreshRequested = false
+                        )
 
+                    }else{
+                        // Something happened use old ui state
+                        currState.copy(
+                            uiMessages = currState.uiMessages,
+                            initialized = currState.initialized,
+                            refreshRequested = false
+                        )
+                    }
+
+                }
+            }
+        }
     }
 
     /** fetch message */
